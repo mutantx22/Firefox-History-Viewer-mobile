@@ -1,12 +1,12 @@
-Firefox History Viewer
-======================
+Firefox History Viewer 2025
+===========================
 
 
 Simple history viewer for Mozilla Firefox in Python. 
 
 Requires:
 - Linux
-- Python 2.7
+- Python 3+
 - sqlite3
 - jinja2
 - Mozilla Firefox
