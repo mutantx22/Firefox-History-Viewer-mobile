@@ -1,51 +1,30 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 from modules.reporter import HTMLreporter
 from modules.database import DBReader
+import sys
+import argparse
 
-import sys, getopt
+def main():
+    parser = argparse.ArgumentParser(description="Firefox History Viewer")
+    parser.add_argument('-p', '--path', type=str, help='Path to places.sqlite file (default is the one from the current user)')
+    parser.add_argument('-o', '--out', type=str, required=True, help='Generated report file')
+    args = parser.parse_args()
 
-def main(argv):
-	dbPath = None
-	reportPath = None
+    dbPath = args.path
+    reportPath = args.out
 
-	usage = """
-	Usage: firefoxHistoryViewer.py [OPTIONS]
+    try:
+        db = DBReader(dbPath)
+        htmlReporter = HTMLreporter()
+        htmlReporter.report([row for row in db], reportPath)
+        db.close()
+    except ValueError as e:
+        print(f"Error: {e.args[0]}")
+        parser.print_usage()
+    except Exception as e:
+        print(f"Unknown error: {e}")
+        parser.print_usage()
 
-	Options:
-		-h,  --help :  print this usage
-		-p,  --path :  path to places.sqlite file
-		               default is the one from current user 
-		-o,  --out  :  generated report file
-	"""
-	if len(argv):
-		try:
-			opts, args = getopt.getopt(argv[1:], "hp:o:", ["help", "path=", "out="])
-		except getopt.GetoptError:
-			print usage
-			sys.exit(1)
-		else:
-			for opt, arg in opts:
-				if opt in ("-h", "--help"):
-					print usage
-					sys.exit(0)
-				elif opt in ("-p", "--path"):
-					dbPath = arg
-				elif opt in ("-o", "--out"):
-					reportPath = arg
-				else:
-					assert False, "Unhandled option"
-	try:
-		db = DBReader(dbPath)
-		htmlReporter = HTMLreporter()
-		htmlReporter.report([row for row in db], reportPath)
-		db.close()
-	except ValueError as e:
-		print "Error: %s" % e.args[0]
-		print usage
-	except:
-		print "Unknown error"
-		print usage
-	
-
-if __name__ == "__main__" : main(sys.argv)
+if __name__ == "__main__":
+    main()
