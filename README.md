@@ -13,7 +13,7 @@ Requires:
 
 Usage: 
 
-python firefoxHistoryViewer.py [-h] [-p PATH] -o OUT [-f {html,json}]
+`python firefoxHistoryViewer.py [-h] [-p PATH] -o OUT [-f {html,json}]`
 
 Example:
 
