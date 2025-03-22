@@ -13,8 +13,8 @@ Requires:
 
 Usage: 
 
-	python firefoxHistoryViewer.py [-h] [-p PATH] -o OUT [-f {html,json}]
+python firefoxHistoryViewer.py [-h] [-p PATH] -o OUT [-f {html,json}]
 
 Example:
 
-  python firefoxHistoryViewer.py -p /path/to/places.sqlite -o history.json -f json
+	python firefoxHistoryViewer.py -p /path/to/places.sqlite -o history.json -f json
