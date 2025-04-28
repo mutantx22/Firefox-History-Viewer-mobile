@@ -17,16 +17,17 @@
         <thead>
             <tr>
                 <th>Title</th>
-                <th>Time</th>
                 <th>URL</th>
+                <th>Time</th>
             </tr>
         </thead>
         <tbody>
             {% for row in rows %}
             <tr>
                 <td class="url">{{ row.title }}</td>
+				<td class="url"><a href="{{ row.url }}">{{ row.url }}</a></td>
                 <td>{{ row.time }}</td>
-                <td class="url"><a href="{{ row.url }}">{{ row.url }}</a></td>
+                
             </tr>
             {% endfor %}
         </tbody>
