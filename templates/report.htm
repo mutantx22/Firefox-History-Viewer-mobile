@@ -1,22 +1,35 @@
 <!DOCTYPE html>
-<html>
-	<head>
-		<title>Firefox History List</title>
-		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-	</head>
-	<body>
-		<h3>Firefox History List</h3><br>
-		<table border="1" cellpadding="5">
-			<tr bgcolor="E0E0E0">
-				<th>URL
-				<th>Title
-				<th>Last Visit Date
-			{% for row in rows %}
-			<tr>
-				<td bgcolor=#FFFFFF><a href="{{ row.url|e }}">{{ row.url|e }}</a>
-				<td bgcolor=#FFFFFF>{{ row.title or ''|e }}
-				<td bgcolor=#FFFFFF>{{ row.time|e }}
-			{% endfor %}
-		</table>
-	</body>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Firefox History</title>
+	<style>
+    td.url {
+        word-break: break-all;
+        white-space: pre-wrap;
+        max-width: 500px; /* Optional: limit column width */
+    }
+    </style>
+</head>
+<body>
+    <h1>Firefox History Report</h1>
+    <table border="1" cellspacing="0" cellpadding="5">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Time</th>
+                <th>URL</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in rows %}
+            <tr>
+                <td class="url">{{ row.title }}</td>
+                <td>{{ row.time }}</td>
+                <td class="url"><a href="{{ row.url }}">{{ row.url }}</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
 </html>
