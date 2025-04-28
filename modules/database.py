@@ -40,9 +40,13 @@ class DBReader:
 
     def __iter__(self):
         query = """
-        SELECT title, url, datetime(last_visit_date/1000000, 'unixepoch', 'localtime') as time
+        SELECT 
+            title, 
+            url, 
+            datetime(last_visit_date_local/1000000, 'unixepoch', 'localtime') as time,
+            'local' as time_source
         FROM moz_places 
-        WHERE last_visit_date IS NOT NULL;
+        WHERE last_visit_date_local IS NOT NULL;
         """
         try:
             cursor = self._db.execute(query)
@@ -50,6 +54,8 @@ class DBReader:
                 yield dict(row)
         except sqlite3.DatabaseError as e:
             print(f"Database error: {e.args[0]}")
+
+
 
 def main():
     print(findPath())
