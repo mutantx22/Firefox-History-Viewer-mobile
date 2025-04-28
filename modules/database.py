@@ -39,21 +39,43 @@ class DBReader:
         del self._dbPath
 
     def __iter__(self):
-        query = """
+        # Step 1: Determine which column is available
+        try:
+            cursor = self._db.execute("PRAGMA table_info(moz_places);")
+            columns = {row[1] for row in cursor.fetchall()}
+        except sqlite3.DatabaseError as e:
+            print(f"Database error during schema check: {e.args[0]}")
+            return
+        
+        if 'last_visit_date_local' in columns:
+            time_column = 'last_visit_date_local'
+            time_source = 'utc'
+            time_conversion = f"datetime({time_column}/1000, 'unixepoch', 'localtime')"
+        elif 'last_visit_date' in columns:
+            time_column = 'last_visit_date'
+            time_source = 'utc'
+            time_conversion = f"datetime({time_column}/1000000, 'unixepoch')"
+        else:
+            print("Neither 'last_visit_date_local' nor 'last_visit_date' column found.")
+            return
+        
+        # Step 2: Construct and execute the query
+        query = f"""
         SELECT 
             title, 
             url, 
-            datetime(last_visit_date_local/1000000, 'unixepoch', 'localtime') as time,
-            'local' as time_source
+            {time_conversion} as time,
+            '{time_source}' as time_source
         FROM moz_places 
-        WHERE last_visit_date_local IS NOT NULL;
+        WHERE {time_column} IS NOT NULL;
         """
         try:
             cursor = self._db.execute(query)
             for row in cursor:
                 yield dict(row)
         except sqlite3.DatabaseError as e:
-            print(f"Database error: {e.args[0]}")
+            print(f"Database error during query: {e.args[0]}")
+
 
 
 
