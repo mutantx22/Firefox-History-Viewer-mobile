@@ -63,8 +63,8 @@ class DBReader:
         query = f"""
         SELECT 
             title, 
-            url, 
             {time_conversion} as time,
+            url,
             '{time_source}' as time_source
         FROM moz_places 
         WHERE {time_column} IS NOT NULL;
@@ -72,18 +72,10 @@ class DBReader:
         try:
             cursor = self._db.execute(query)
             for row in cursor:
-                yield dict(row)
+                yield {
+                    'title': row['title'] or '(No Title)',
+                    'time': row['time'],
+                    'url': row['url']
+                }
         except sqlite3.DatabaseError as e:
-            print(f"Database error during query: {e.args[0]}")
-
-
-
-
-def main():
-    print(findPath())
-    rows = [row for row in DBReader()]
-    for row in rows:
-        print(row['title'])
-
-if __name__ == "__main__":
-    main()
+                    print(f"Database error during query: {e.args[0]}")
