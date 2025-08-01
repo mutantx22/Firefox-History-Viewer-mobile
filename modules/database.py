@@ -74,7 +74,7 @@ class DBReader:
             for row in cursor:
                 yield {
                     'title': row['title'] or '(No Title)',
-                    'time': row['time'],
+                    'time': row['time'].replace(' ', ' &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ', 5),
                     'url': row['url']
                 }
         except sqlite3.DatabaseError as e:
