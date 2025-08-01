@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <title>Firefox History</title>
 	<style>
+	
+	a.title-link {
+            text-decoration: none;
+            color: inherit;
+        }
+	
     td.url {
         word-break: break-all;
         white-space: pre-wrap;
@@ -24,7 +30,7 @@
         <tbody>
             {% for row in rows %}
             <tr>
-                <td class="url">{{ row.title }}</td>
+                <td class="url"><a href="{{ row.url }}" class="title-link">{{ row.title }}</a></td>
 				<td class="url"><a href="{{ row.url }}">{{ row.url }}</a></td>
                 <td>{{ row.time }}</td>
                 
