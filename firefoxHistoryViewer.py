@@ -19,7 +19,7 @@ def main():
 
     try:
         db = DBReader(dbPath)
-        rows = sorted((row for row in db), key=lambda r: r['time'], reverse=True)
+        rows = list(db)
         
         if output_format == 'html':
             reporter = HTMLreporter()
