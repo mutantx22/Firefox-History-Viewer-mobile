@@ -3,6 +3,7 @@
 import os
 import sqlite3
 import subprocess
+from datetime import datetime, timezone, timedelta
 
 def findPath():
     username = subprocess.run(["whoami"], capture_output=True, text=True).stdout.strip()
@@ -10,6 +11,23 @@ def findPath():
     path += [name for name in os.listdir(path) if name.endswith(".default")][0]
     path += "/places.sqlite"
     return path
+
+def convert_time(timestamp, is_microseconds=True):
+    # Firefox timestamps are in microseconds or milliseconds
+    if is_microseconds:
+        ts = timestamp / 1_000_000
+    else:
+        ts = timestamp / 1000
+    dt = datetime.fromtimestamp(ts).astimezone()
+    return dt.strftime('%Y-%m-%d') + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + dt.strftime('%H:%M:%S')
+
+def get_date_string(timestamp, is_microseconds=True):
+    if is_microseconds:
+        ts = timestamp / 1_000_000
+    else:
+        ts = timestamp / 1000
+    dt = datetime.fromtimestamp(ts).astimezone()
+    return dt.strftime('%B %d %Y')
 
 class DBReader:
     def __init__(self, dbPath=None):
@@ -39,43 +57,55 @@ class DBReader:
         del self._dbPath
 
     def __iter__(self):
-        # Step 1: Determine which column is available
         try:
             cursor = self._db.execute("PRAGMA table_info(moz_places);")
             columns = {row[1] for row in cursor.fetchall()}
         except sqlite3.DatabaseError as e:
             print(f"Database error during schema check: {e.args[0]}")
             return
-        
+	    
         if 'last_visit_date_local' in columns:
             time_column = 'last_visit_date_local'
-            time_source = 'utc'
-            time_conversion = f"datetime({time_column}/1000, 'unixepoch', 'localtime')"
+            is_microseconds = False  # milliseconds
         elif 'last_visit_date' in columns:
             time_column = 'last_visit_date'
-            time_source = 'utc'
-            time_conversion = f"datetime({time_column}/1000000, 'unixepoch')"
+            is_microseconds = True   # microseconds
         else:
-            print("Neither 'last_visit_date_local' nor 'last_visit_date' column found.")
+            print("No valid time column found in database.")
             return
-        
-        # Step 2: Construct and execute the query
+	    
         query = f"""
-        SELECT 
-            title, 
-            {time_conversion} as time,
-            url,
-            '{time_source}' as time_source
-        FROM moz_places 
-        WHERE {time_column} IS NOT NULL;
+            SELECT title, url, {time_column} as raw_time
+            FROM moz_places
+            WHERE {time_column} IS NOT NULL
+            ORDER BY raw_time DESC;
         """
+	    
         try:
             cursor = self._db.execute(query)
+            previous_date = None
             for row in cursor:
+                raw_time = row['raw_time']
+                date_str = get_date_string(raw_time, is_microseconds)
+                formatted_time = convert_time(raw_time, is_microseconds)
+	    
+                if date_str != previous_date:
+                    # Yield a pseudo-row that mimics real rows, but acts as a header
+                    yield {
+                        'title': '',
+                        'url': '',
+                        'time': '',
+                        'date_separator': date_str
+                    }
+                    previous_date = date_str
+	    
                 yield {
                     'title': row['title'] or '(No Title)',
-                    'time': row['time'].replace(' ', ' &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ', 5),
-                    'url': row['url']
+                    'url': row['url'],
+                    'time': formatted_time
                 }
+	    
         except sqlite3.DatabaseError as e:
-                    print(f"Database error during query: {e.args[0]}")
+            print(f"Database error during query: {e.args[0]}")
+
+
