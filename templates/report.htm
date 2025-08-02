@@ -5,6 +5,17 @@
     <title>Firefox History</title>
 	<style>
 	
+	
+	h2 {
+        margin: 0;
+        padding: 6px;
+        background: #eee;
+        border-top: 2px solid #ccc;
+        font-size: 2.1em;
+        color: #ff5733;  /* 🔶 this is what you want */
+    }
+	
+	
 	a.title-link {
             text-decoration: none;
             color: inherit;
@@ -29,12 +40,15 @@
         </thead>
         <tbody>
             {% for row in rows %}
-            <tr>
-                <td class="url"><a href="{{ row.url }}" class="title-link">{{ row.title }}</a></td>
-				<td class="url"><a href="{{ row.url }}">{{ row.url }}</a></td>
-                <td>{{ row.time }}</td>
-                
-            </tr>
+                {% if row.date_separator is defined %}
+                    <tr><td colspan="3"><h2>{{ row.date_separator }}</h2></td></tr>
+                {% else %}
+                    <tr>
+                        <td class="url"><a href="{{ row.url }}" class="title-link">{{ row.title }}</a></td>
+                        <td class="url"><a href="{{ row.url }}">{{ row.url }}</a></td>
+                        <td>{{ row.time }}</td>
+                    </tr>
+                {% endif %}
             {% endfor %}
         </tbody>
     </table>
