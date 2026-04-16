@@ -63,7 +63,7 @@ class DBReader:
         except sqlite3.DatabaseError as e:
             print(f"Database error during schema check: {e.args[0]}")
             return
-	    
+        
         if 'last_visit_date_local' in columns:
             time_column = 'last_visit_date_local'
             is_microseconds = False  # milliseconds
@@ -73,24 +73,35 @@ class DBReader:
         else:
             print("No valid time column found in database.")
             return
-	    
+        
         query = f"""
             SELECT title, url, {time_column} as raw_time
             FROM moz_places
-            WHERE {time_column} IS NOT NULL
             ORDER BY raw_time DESC;
         """
-	    
+        
+        invalid_rows = []
+        
         try:
             cursor = self._db.execute(query)
             previous_date = None
+        
             for row in cursor:
                 raw_time = row['raw_time']
-                date_str = get_date_string(raw_time, is_microseconds)
-                formatted_time = convert_time(raw_time, is_microseconds)
-	    
+        
+                # Handle NULL or invalid timestamps
+                if raw_time is None:
+                    invalid_rows.append(row)
+                    continue
+        
+                try:
+                    date_str = get_date_string(raw_time, is_microseconds)
+                    formatted_time = convert_time(raw_time, is_microseconds)
+                except Exception:
+                    invalid_rows.append(row)
+                    continue
+        
                 if date_str != previous_date:
-                    # Yield a pseudo-row that mimics real rows, but acts as a header
                     yield {
                         'title': '',
                         'url': '',
@@ -98,13 +109,29 @@ class DBReader:
                         'date_separator': date_str
                     }
                     previous_date = date_str
-	    
+        
                 yield {
-                    'title': row['title'] or '(No Title)',
+                    'title': row['title'] if row['title'] else row['url'],
                     'url': row['url'],
                     'time': formatted_time
                 }
-	    
+        
+            # 🔻 Add invalid/unknown section at the end
+            if invalid_rows:
+                yield {
+                    'title': '',
+                    'url': '',
+                    'time': '',
+                    'date_separator': 'Unknown / Invalid Date'
+                }
+        
+                for row in invalid_rows:
+                    yield {
+                        'title': row['title'] if row['title'] else row['url'],
+                        'url': row['url'],
+                        'time': 'N/A'
+                    }
+        
         except sqlite3.DatabaseError as e:
             print(f"Database error during query: {e.args[0]}")
 
